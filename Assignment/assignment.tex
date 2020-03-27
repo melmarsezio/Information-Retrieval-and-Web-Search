@@ -1,0 +1,324 @@
+\documentclass[12pt, letterpaper, twoside]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{xcolor}
+\newcommand{\pluseq}{\mathrel{+}=}
+\usepackage[ruled, vlined, linesnumbered]{algorithm2e}
+\newcommand\mycommfont[1]{\footnotesize\ttfamily\textcolor{blue}{#1}}
+\SetCommentSty{mycommfont}
+\usepackage[a4paper, top=2cm, bottom=2cm, left=1.5cm, right=2.5cm, maginparwidth=2cm]{geometry}
+\title{COMP6714 Assignment 1}
+\author{Chencheng Xie\\sid: z5237028}
+\date{November 2019}
+
+\begin{document}
+\maketitle
+\begin{enumerate}
+    \item[Q1.]
+        (1) The algorithm for Intersection(A, B)\\
+        \begin{minipage}{1\linewidth}
+        \begin{algorithm}[H]
+        \caption{Intersect(A, B)}
+        % \SetAlgoLined
+        \SetCustomAlgoRuledWidth{10cm}
+        \KwIn{unsorted lists $A$, $B$}
+        \KwOut{intersection of two list $I$}
+        \eIf{$A.Len$ == 0 or $B.Len$ == 0}{
+        \tcc{If any list is empty, no intersection can be found, return []}
+        \textbf{return} [ ];
+        }{
+            \tcc{If both list contains only one element}
+            \eIf{$A.Len$ == 1 and $B.Len$ == 1}{
+                \eIf{$A[0]$ == $B[0]$}{
+                \tcc{return list contain this element if they match}
+                \textbf{return} \big[ $A[0]$ \big]\;
+                }{
+                \tcc{return empty list, otherwise}
+                \textbf{return} [ ]\;
+                }
+            }{
+                \tcc{Recursive Branch}
+                threshold = $A[0]$\;
+                \textbf{$A_1$}, \textbf{$A_2$}, \textbf{$B_1$}, \textbf{$B_2$} = [ ]\;
+                \tcc{divide $A$,$B$ into $A_1$, $A_2$, $B_1$, $B_2$ by ``smaller or equal to'' or ``larger than'' threshold value}
+                \ForEach{$a \in A$}{
+                    \eIf{$a \leq threshold$}{
+                        $A_1$ \pluseq [a];\\
+                    }{
+                        $A_2$ \pluseq [a];\\
+                    }
+                }
+                \ForEach{$b \in B$}{
+                    \eIf{$b \leq threshold$}{
+                        $B_1$ \pluseq [b];\\
+                    }{
+                        $B_2$ \pluseq [b];\\
+                    }
+                }
+                \tcc{Return the concatenation of two intersections}
+                $I$ = \textbf{Intersect}($A_1$, $B_1$) + \textbf{Intersect}($A_2$, $B_2$)\;
+                \textbf{return} $I$\;
+            }
+        }
+        \end{algorithm}
+        \end{minipage}
+        \\\\\\
+        (2) Think of a method to divide each input list into $k$ sub-lists.\\
+        We can divide each input into \textit{k} sub-lists (\textit{k}$\geq$2): $(A_1, A_2, ... , A_k)$ \& $(B_1, B_2, ... , B_k)$, each sub-lists will be smaller compare to how we break lists into two parts in $(1)$. Smaller size of lists will reach BASE CASE of recursive function faster, and we only need to return the concatenation of $``\textbf{Intersect}(A_1,B_1),\textbf{Intersect}(A_2,B_2),..., \textbf{Intersect}(A_{k-1},B_{k-1}),\\ \textbf{Intersect}(A_k,B_k)"$.\\\\
+        So the only difference is that we need to select $k-1$ threshold values to have $k$ intervals to separate list into $k-list$. We can easily choose the first $k-1$ elements as threshold value. The performance varies with respect to how well the list is divided. If the list is evenly divided, the performance can be $O(m\log_k m + n\log_k n)$. If the list is badly divided, each time selected threshold values are top $k-1$ values or bottom $k-1$ values, the performance can be $O(m^2 + n^2)$. So the performance ranges between $O(m\log_k m + n\log_k n) \sim O(m^2 + n^2)$.
+
+    \item[Q2.]
+        (1) Show that if the logarithmic merge strategy is used, it will result in at most $\lceil \log_2 t \rceil$\\\text{sub-indexes}.\\
+        The logarithmic-merge strategy merges \textbf{two} sub-indexes with same generation, it allows only \textbf{one} sub-index with same generation at anytime. So in the worse situation, the whole sub-indexes collection is: $I_0, I_1, ... , I_n,$ and they sum up to totally $t$ sub-indexes ($t\times I_0$) if no-merge strategy is used.\\
+        This is essentially:\\
+        \begin{equation}
+            \sum_{i = 0}^{k}I_i = t \times I_0
+        \end{equation}
+        And also each $I_k = 2 \times I_{k-1}$, so:
+        \begin{equation}
+            \sum_{i = 0}^{k}I_i = 2^{k+1}I_0-I_0 = 2\times 2^kI_0-I_0
+        \end{equation}
+        Combine equation (1) \& (2), we have:\\
+        \begin{equation}
+        \begin{split}
+            2\times 2^kI_0-I_0 & = t \times I_0\\
+            2\times 2^k + 1 & = t\\
+            2^{k+1} & = t - 1\\
+            k & = \log_2 (t-1) - 1\\
+            k & = \log_2 t + \log_2 (\frac{t-1}{t})-1\\
+            k & = \log_2 t + 0 - 1 \approx \lceil log_2 t \rceil
+        \end{split}
+        \end{equation}
+        So the number of sub-indexes is at most $\lceil log_2 t \rceil$.\\
+        This can also be interpreted as: The size of sub-indexes increase exponentially with base 2, their sizes sum up to $t\cdot I_0$ (each $I_0$ has $M$ pages), so the number of sub-indexes $k = \lceil log_2 t \rceil$.\\
+
+        (2) Prove that the total I/O cost of the logarithmic merge is $O(t \cdot M \cdot \log_2 t)$.\\
+        The total I/O cost of the logarithmic merge is formed by \textbf{two} parts:\\
+        1. read the whole collection into memory: O($t\cdot M$).\\
+        2. merge operations in the disk:\\
+        Let's consider time frame from 0 to T, where disk is \textbf{empty} at time 0 and disk has $I_0, I_1, ..., I_k$ at time T.
+        The time-frame $T$ needs \textbf{two} time-frame $T-1$ plus $I_0$:\\
+        \begin{equation}
+            \sum_{i = 0}^{k}I_i = 2\times \sum_{i = 0}^{k-1}I_i + I_0 = 2^k\times I_0 + I_0
+        \end{equation}
+        From \textbf{empty} to time T, each time frame roughly doubled, so we have $\log_2 t$ time frames, ($T = \log_2 t$).\\
+        Now consider the cost of last time frame T:\\
+        \text{\qquad each} sub-indexes $I_i$ we need \textbf{two} input of $I_{i-1}$ and \textbf{one} output of $I_i$, so cost of $I_k = (2\times 2^{k-1} + 2^{k})I_0$, and $I_0$ has $M$ pages, so cost of $I_k = 2\times 2^{k}M = 2\times t\cdot M$.\\
+        Sum of this time frame T is $2\times I_k - I_0 = 2\times 2^{k+1}M - M = 4\times t\cdot M - M$.\\
+        Now we calculate the total cost of merge: number of time frames $\times$ the cost of worst time frame $ = \log_2 t \times 4\times t\cdot M$\\
+        And the total cost of whole I/O process is: $t\cdot M + 4\log_2 t\cdot tM$ or $O(t\cdot M\cdot \log_2 t)$.
+    \item[Q3.]
+    We can summary the following table with provided information:\\
+    \begin{center}
+    \begin{tabular}{||c | c | c | c||}
+    \hline
+    $k-th$ Output & Judgement & Prec @ k & Recall @ k \\ [0.5ex]
+    \hline\hline
+    1 & R & 1/1 & 1/8 \\
+    \hline
+    2 & R & 2/2 & 2/8\\
+    \hline
+    3 & N & 2/3 & 2/8\\
+    \hline
+    4 & N & 2/4 & 2/8\\
+    \hline
+    5 & N & 2/5 & 2/8\\
+    \hline
+    6 & N & 2/6 & 2/8\\
+    \hline
+    7 & N & 2/7 & 2/8\\
+    \hline
+    8 & N & 2/8 & 2/8\\
+    \hline
+    9 & R & 3/9 & 3/8\\
+    \hline
+    10 & N & 3/10 & 3/8\\
+    \hline
+    11 & R & 4/11 & 4/8\\
+    \hline
+    12 & N & 4/12 & 4/8\\
+    \hline
+    13 & N & 4/13 & 4/8\\
+    \hline
+    14 & N & 4/14 & 4/8\\
+    \hline
+    15 & R & 5/15 & 5/8\\
+    \hline
+    16 & N & 5/16 & 5/8\\
+    \hline
+    17 & N & 5/17 & 5/8\\
+    \hline
+    18 & N & 5/18 & 5/8\\
+    \hline
+    19 & N & 5/19 & 5/8\\
+    \hline
+    20 & R & 6/20 & 6/8\\ %[1ex]
+    \hline
+    \end{tabular}
+    \end{center}
+
+        (1) What is the precision of the system on the top-20?\\
+        The precision of the system on the top-20 is calculated as
+        \begin{equation}
+        \begin{split}
+             \textit{Precision P} & = \frac{\textit{\# Retrieved R}}{(\textit{\# Retrieved R} + \textit{\# Retrieved N})}\\
+            & = \frac{6}{20} = 30\%
+        \end{split}
+        \end{equation}
+        \newpage
+        (2) What is the $F_1$ on the top-20?\\
+        \begin{equation}
+        \begin{split}
+            \textit{Recall R} & = \frac{\textit{\# Retrieved R}}{(\textit{\# Retrieved R} + \textit{\# Not Retrieved R})}\\
+            & = \frac{6}{8} = 75\%
+        \end{split}
+        \end{equation}
+
+        \begin{equation}
+        \begin{split}
+            F_1 & = \frac{1}{\alpha\frac{1}{P}+(1-\alpha)\frac{1}{R}}
+             = \frac{(\beta^2+1)PR}{\beta^2P+R}\\
+            &\quad (with\ \beta = 1\ or\ \alpha = 1/2)\\
+            & = \frac{(1^2+1)\times 30\% \times 75\%}{1^2\times 30\% + 75\%}\\
+            & = 42.86\%
+        \end{split}
+        \end{equation}
+
+        (3) What is/are the uninterpolated precision(s) of the system at 25\% recall?\\
+        All the following returns give 25\% recall:
+        \begin{center}
+            R R\\R R N\\R R N N\\R R N N N\\R R N N N \quad N\\R R N N N \quad N N\\R R N N N \quad N N N\\
+        \end{center}
+        And the corresponding uninterpolated precisions are:
+        \begin{center}
+        \begin{tabular}{||c | c | c||}
+        \hline
+         Judgements & Uninterpolated precisions & Recall \\ [0.5ex]
+        \hline\hline
+        R R & 2/2 (100\%) & 2/8\\
+        \hline
+        R R N & 2/3 (66.7\%)& 2/8\\
+        \hline
+        R R N N & 2/4 (50\%) & 2/8\\
+        \hline
+        R R N N N & 2/5 (40\%)& 2/8\\
+        \hline
+        R R N N N\quad N & 2/6 (33.3\%)& 2/8\\
+        \hline
+        R R N N N\quad N N & 2/7 (28.6\%)& 2/8\\
+        \hline
+        R R N N N\quad N N N & 2/8 (25\%)& 2/8\\
+        \hline
+        \end{tabular}
+        \end{center}
+
+        (4) What is the interpolated precision at 33\% recall?\\
+        The interpolated precision is the maximum precision to the right of the value.\\
+        $8th$ Output has recall 25\%, $9th$ Output has recall 37.5\%, so the interpolated precision at 33\% recall will be the maximum precision among $9th$ to $20th$ Outputs:
+        \begin{equation}
+        \begin{split}
+            \text{Interpolated precision @ 33\%} & = \max(\frac{3}{9},\frac{3}{10},\frac{4}{11},\frac{4}{12},\frac{4}{13},\frac{4}{14},\frac{5}{15},\frac{5}{16},\frac{5}{17},\frac{5}{18},\frac{5}{19},\frac{6}{20})\\
+            & = \frac{4}{11} = 36.36\%
+        \end{split}
+        \end{equation}
+
+        (5) What is the \textbf{MAP} for the query?\\
+        Since we have only one result set, the \textbf{MAP} is the \textit{Average Precision} of this result set.\\
+        \begin{equation}
+        \begin{split}
+            \textbf{MAP} & = \frac{\frac{1}{1} + \frac{2}{2} + \frac{3}{9} + \frac{4}{11} + \frac{5}{15} + \frac{6}{20}}{8}\\
+            & = \frac{1099}{2640} = 41.63\%
+        \end{split}
+        \end{equation}
+
+        (6) What is the largest possible \textbf{MAP} that this system could have?\\
+        The earlier the relevant documents are retrieved, the larger the \textbf{MAP} will be.\\
+        We already have 6 relevant documents retrieved in $top-20$ returns, so the largest possible \textbf{MAP} is under the case where $21st$ and $22nd$ Outputs are relevant documents.\\
+        \begin{equation}
+        \begin{split}
+            \textbf{MAP} & = \frac{\frac{1}{1} + \frac{2}{2} + \frac{3}{9} + \frac{4}{11} + \frac{5}{15} + \frac{6}{20} + \frac{7}{21} + \frac{8}{22}}{8}\\
+            & = \frac{443}{880} = 50.34\%
+        \end{split}
+        \end{equation}
+
+        (7) What is the smallest possible \textbf{MAP} that this system could have?\\
+        The later the relevant documents are retrieved, the smaller the \textbf{MAP} will be.\\
+        So the smallest possible \textbf{MAP} is under the case where $9999th$ and $10000th$ Outputs are relevant documents.\\
+        \begin{equation}
+        \begin{split}
+            \textbf{MAP} & = \frac{\frac{1}{1} + \frac{2}{2} + \frac{3}{9} + \frac{4}{11} + \frac{5}{15} + \frac{6}{20} + \frac{7}{9999} + \frac{8}{10000}}{8}\\
+            & = 41.65\%
+        \end{split}
+        \end{equation}
+
+        (8) How large (in absolute terms) can the error for the \textbf{MAP} be?\\
+        The error between the approximated \textbf{MAP} and the smallest possible \textbf{MAP} is $41.65\% - 41.63\% = 0.02\%$.\\\\
+        The error between the approximated \textbf{MAP} and the largest possible \textbf{MAP} is $50.34\% - 41.63\% = 8.71\%$.\\\\
+        % Since we only consider the error in absolute terms,
+        The error for the \textbf{MAP} by calculating (5) instead of (6) and (7) for this query can be ranges from 0.02\% to 8.71\%.
+
+    \item[Q4.]
+        (1) Compute the likelihood of the query for both $d_1$ and $d_2$, without smoothing.\\
+        \begin{equation}
+        \begin{split}
+            p(Q|d) & \approx p(Q|M_d) \\
+            & = \prod_{w \in Q}^{} p(w|M_d)\\
+            & = \prod_{w \in Q}^{} \frac{tf_{(w,d)}}{dl_d}\\
+            % & \text{If any term is 0, replace with $p(w|C)$ to avoid absolute 0 of the whole Query}.
+        \end{split}
+        \end{equation}\\
+        \\
+        So we can calculate $p(Q|d_1)$ and $p(Q|d_2)$ respectively:
+        \begin{equation}
+        \begin{split}
+            p(Q|d_1) & = \prod_{w \in Q}^{} \frac{tf_{(w,d_1)}}{{dl_d__1}}\\
+            & = \frac{2}{10}\times\frac{3}{10}\times\frac{1}{10}\times\frac{2}{10}\times\frac{2}{10}\times \frac{0}{10}\\
+            & = 0
+        \end{split}
+        \end{equation}
+        \begin{equation}
+        \begin{split}
+            p(Q|d_2) & = \prod_{w \in Q}^{} \frac{tf_{(w,d_2)}}{{dl_d__2}}\\
+            & = \frac{7}{10}\times\frac{1}{10}\times\frac{1}{10}\times\frac{1}{10}\times \frac{0}{10}\times \frac{0}{10}\\
+            & = 0
+        \end{split}
+        \end{equation}
+        Due to not adopting any smoothing method, as long as there is \textbf{any} word with \textbf{zero} occurrence in particular document, the whole \textbf{Query} with respect to that document has \textbf{0} probability.\\
+        So here $p(Q|d_1) = p(Q|d_2) = 0$, we can not ranked any document higher than another.\\
+
+        (2) Compute the likelihood of the query for both $d_1$ and $d_2$, do smooth with Jelinek-Mercer's method.\\
+        The Jelinek-Mercers model (with $\lambda = 0.8$):
+        \begin{equation}
+        \begin{split}
+            p(w|d) & = \lambda p(w|M_d) + (1-\lambda)p(w|M_c)\\
+        \end{split}
+        \end{equation}
+        So the likelihood of query is calculated as:
+        \begin{equation}
+        \begin{split}
+            p(Q|d) & = \prod_{w \in Q}^{} p(w|d)\\
+            & = \prod_{w \in Q}^{} \lambda p(w|M_d) + (1-\lambda)p(w|M_c)
+        \end{split}
+        \end{equation}
+        Now we can calculate $p(Q|d_1)$ and $p(Q|d_2)$ respectively:\\
+        \begin{equation}
+        \begin{split}
+            p(Q|d_1) & = \prod_{w \in Q}^{} \lambda p(w|M_d__1) + (1-\lambda)p(w|M_c)\\
+            & = (0.8\times \frac{2}{10}+0.2\times 0.8)\times (0.8\times \frac{3}{10}+0.2\times 0.1)\times (0.8\times \frac{1}{10}+0.2\times 0.025)\\
+            &\times (0.8\times \frac{2}{10}+0.2\times 0.025)\times (0.8\times \frac{2}{10}+0.2\times 0.025)\times (0.8\times \frac{0}{10}+0.2\times 0.025)\\
+            & = 0.000000962676 = 9.6\times10^{-7}\\
+        \end{split}
+        \end{equation}
+        \begin{equation}
+        \begin{split}
+            p(Q|d_2) & = \prod_{w \in Q}^{} \lambda p(w|M_d__2) + (1-\lambda)p(w|C)\\
+            & = (0.8\times \frac{7}{10}+0.2\times 0.8)\times (0.8\times \frac{1}{10}+0.2\times 0.1)\times (0.8\times \frac{1}{10}+0.2\times 0.025)\\
+            &\times (0.8\times \frac{1}{10}+0.2\times 0.025)\times (0.8\times \frac{0}{10}+0.2\times 0.025)\times (0.8\times \frac{0}{10}+0.2\times 0.025)\\
+            & = 0.000000013005 = 1.3\times10^{-8}\\
+        \end{split}
+        \end{equation}
+        $p(Q|d_1) > p(Q|d_2)$, so document 1 $d_1$ would be ranked higher than document 2 $d_2$.\\
+\end{enumerate}
+\end{document}
